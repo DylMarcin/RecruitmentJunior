@@ -31,7 +31,7 @@ def fetch_api(token):
     return response_API.json()['result']
 
 def slice_json(json):
-    data = []
+    products = []
     for product in json:
         for i in range(len(product['details']['supply'])):
             if 'variants' in product and len(product['details']['supply'][i]['stock_data'])>0:
@@ -39,14 +39,17 @@ def slice_json(json):
                     'variant_id':product['variants'][i],
                     'stock':product['details']['supply'][i]['stock_data'],
                 }
-                data.append(cache)
-    return [{'variant_id': entry['variant_id'], 'stock_id': stock['stock_id'], 'quantity': stock['quantity']} for entry in data for stock in entry['stock']]
+                products.append(cache)
+    return [{'variant_id': entry['variant_id'], 'stock_id': stock['stock_id'], 'quantity': stock['quantity']} for entry in products for stock in entry['stock']]
 
 def update_database(data):
     cursor = sql.cursor()
 
     for element in data:
-        cursor.execute("UPDATE product_stocks SET supply = '%s' WHERE variant_id = '%s' AND stock_id = '%s'" % (element['quantity'], element['variant_id'], element['stock_id']))
+        cursor.execute(
+            "UPDATE product_stocks SET supply = '%s' WHERE variant_id = '%s' AND stock_id = '%s'" 
+            %
+            (element['quantity'], element['variant_id'], element['stock_id']))
     
     sql.commit()
 
@@ -57,7 +60,7 @@ def main():
     access_token = get_access_token(base64str) # Wysłanie requesta do API w celu otrzymania tokenu dostępu
     data = fetch_api(access_token) # Pobranie danych z API
     sliced_json = slice_json(data) # Wyciągnięcie tylko potrzebnych elementów z jsona
-    update_database(sliced_json) # Zaktualizowanie bazy danych na dysku do aktualnych stanów API
+    update_database(sliced_json) # Zaktualizowanie bazy na dysku do aktualnych stanów API
 
 main()
 
