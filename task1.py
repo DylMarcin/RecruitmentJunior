@@ -40,7 +40,13 @@ def slice_json(json):
                     'stock':product['details']['supply'][i]['stock_data'],
                 }
                 products.append(cache)
-    return [{'variant_id': entry['variant_id'], 'stock_id': stock['stock_id'], 'quantity': stock['quantity']} for entry in products for stock in entry['stock']]
+    separated_stocks = stock_separate(products)
+    return separated_stocks
+
+def stock_separate(products):
+    return [{'variant_id': entry['variant_id'], 'stock_id': stock['stock_id'], 'quantity': stock['quantity']} 
+    for entry in products 
+    for stock in entry['stock']]
 
 def update_database(data):
     cursor = sql.cursor()
@@ -59,8 +65,8 @@ def main():
     base64str = str_to_base64(credentials) # Konwersja stringa danych logowania na format Base64
     access_token = get_access_token(base64str) # Wysłanie requesta do API w celu otrzymania tokenu dostępu
     data = fetch_api(access_token) # Pobranie danych z API
-    sliced_json = slice_json(data) # Wyciągnięcie tylko potrzebnych elementów z jsona
-    update_database(sliced_json) # Zaktualizowanie bazy na dysku do aktualnych stanów API
+    sliced_data = slice_json(data) # Wyciągnięcie tylko potrzebnych elementów z jsona
+    update_database(sliced_data) # Zaktualizowanie bazy na dysku do aktualnych stanów API
 
 main()
 
