@@ -1,20 +1,21 @@
 from sqlite3 import connect
 import requests
 
-PATH = "https://recruitment.developers.emako.pl/products/example?id="
+DOMAIN = "https://recruitment.developers.emako.pl/products/example?id="
 
 sql = connect(database="database.sqlite")
 cursor = sql.cursor()
 
-def fetch_api(index):
-    endpoint = PATH + index
+
+def fetch_api(path: str):
+    endpoint = DOMAIN + path
     return requests.get(endpoint).json()
 
-def type_check(data):
+def update_database(data):
     if data['type'] == 'product':
-        insert_product(data)
+        insert_product(data) # Wprowadzenie produktu do bazy
     elif data['type'] == 'bundle':
-        insert_bundle(data)
+        unpack_bundle(data) # Rozpakowanie pakietu produktów
 
 def insert_product(product):
     for item in product["details"]["supply"]:
@@ -25,17 +26,17 @@ def insert_product(product):
                 (product['created_at'], product['id'], item["variant_id"], stock['stock_id'], stock['quantity']))
     sql.commit()
 
-def insert_bundle(bundle):
+def unpack_bundle(bundle):
     for index in range(len(bundle['bundle_items'])):
         product = fetch_api(str(bundle['bundle_items'][index]['id']))
         for _ in range(bundle['bundle_items'][index]['quantity']):
             insert_product(product)
 
 def main():
-    index = input('Wpisz id produktu: ')
-    response_api = fetch_api(str(index))
-    type_check(response_api)
-    
+    path = input('Wpisz id produktu: ') # Pobranie z klawiatury id produktu
+    api_response = fetch_api(path) # Pobranie danych z API
+    update_database(api_response)
+
 main()
 
 sql.close()
