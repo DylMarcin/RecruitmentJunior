@@ -48,10 +48,10 @@ def stock_separate(products):
     for entry in products 
     for stock in entry['stock']]
 
-def update_database(data):
+def update_database(stocks):
     cursor = sql.cursor()
 
-    for element in data:
+    for element in stocks:
         cursor.execute(
             "UPDATE product_stocks SET supply = '%s' WHERE variant_id = '%s' AND stock_id = '%s'" 
             %
@@ -59,14 +59,13 @@ def update_database(data):
     
     sql.commit()
 
-
 def main():
     credentials = load_from_file('credentials.json') # Wczytanie z pliku .json danych logowania
     base64str = str_to_base64(credentials) # Konwersja stringa danych logowania na format Base64
     access_token = get_access_token(base64str) # Wysłanie requesta do API w celu otrzymania tokenu dostępu
     data = fetch_api(access_token) # Pobranie danych z API
-    sliced_data = slice_json(data) # Wyciągnięcie tylko potrzebnych elementów z jsona
-    update_database(sliced_data) # Zaktualizowanie bazy na dysku do aktualnych stanów API
+    stocks = slice_json(data) # Wyciągnięcie tylko potrzebnych elementów z jsona
+    update_database(stocks) # Zaktualizowanie bazy na dysku do aktualnych stanów API
 
 main()
 
